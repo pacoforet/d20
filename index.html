@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Dado D20 3D</title>
+
+  <!-- Configuración PWA e iOS Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="D20">
+  <meta name="theme-color" content="#0d1117">
+
+  <!-- Icono dinámico para la pantalla de inicio de iPhone -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,5 90,25 90,75 50,95 10,75 10,25' fill='%238b0000'/><text x='50' y='60' font-size='32' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-weight='bold'>20</text></svg>">
+
+  <!-- Manifest incrustado -->
+  <link rel="manifest" href="data:application/manifest+json;utf8,{
+    &quot;name&quot;: &quot;Dado D20 3D&quot;,
+    &quot;short_name&quot;: &quot;D20&quot;,
+    &quot;start_url&quot;: &quot;.&quot;,
+    &quot;display&quot;: &quot;standalone&quot;,
+    &quot;background_color&quot;: &quot;#0d1117&quot;,
+    &quot;theme_color&quot;: &quot;#0d1117&quot;
+  }">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0d1117;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: pointer;
+    }
+
+    #ui-overlay {
+      position: absolute;
+      top: env(safe-area-inset-top, 20px);
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none;
+      padding: 10px;
+    }
+
+    #result {
+      font-size: 5rem;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 0 4px 15px rgba(0,0,0,0.7);
+      opacity: 0;
+      transform: scale(0.6);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    #result.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    #instruction {
+      position: absolute;
+      bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+    }
+  </style>
+
+  <!-- Three.js y Cannon-es -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
+</head>
+<body>
+
+  <div id="ui-overlay">
+    <div id="result">--</div>
+  </div>
+  <div id="instruction">Toca en la pantalla para lanzar</div>
+  <div id="canvas-container"></div>
+
+  <script>
+    // --- Configuración y Variables ---
+    let scene, camera, renderer, world;
+    let diceBody, diceMesh;
+    let isRolling = false;
+    const resultEl = document.getElementById('result');
+    const RADIUS = 1.8;
+
+    // Generador de texturas de números para cada cara
+    function createFaceTexture(num) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+
+      // Fondo del triángulo (textura rojo oscuro marmoleado/acrílico)
+      ctx.fillStyle = '#6b0f1a';
+      ctx.fillRect(0, 0, 256, 256);
+
+      // Borde de la cara
+      ctx.strokeStyle = '#3e060d';
+      ctx.lineWidth = 14;
+      ctx.strokeRect(0, 0, 256, 256);
+
+      // Texto/Número grabado en dorado
+      ctx.font = 'bold 110px serif';
+      ctx.fillStyle = '#f6d365';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = '#000000';
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetY = 4;
+      
+      // Subrayado para el 6 y el 9
+      const text = num.toString();
+      ctx.fillText(text, 128, 128);
+      if (num === 6 || num === 9) {
+        ctx.fillRect(100, 185, 56, 8);
+      }
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function init() {
+      // 1. Three.js Scene
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 10, 11);
+      camera.lookAt(0, 0, 0);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+      // Luces realistas de estudio
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      dirLight.position.set(5, 15, 8);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 2048;
+      dirLight.shadow.mapSize.height = 2048;
+      dirLight.shadow.camera.near = 1;
+      dirLight.shadow.camera.far = 25;
+      dirLight.shadow.camera.left = -6;
+      dirLight.shadow.camera.right = 6;
+      dirLight.shadow.camera.top = 6;
+      dirLight.shadow.camera.bottom = -6;
+      scene.add(dirLight);
+
+      const rimLight = new THREE.PointLight(0xa5b4fc, 0.8, 20);
+      rimLight.position.set(-6, -2, -5);
+      scene.add(rimLight);
+
+      // 2. Cannon-es Physics World
+      world = new CANNON.World();
+      world.gravity.set(0, -32, 0); // Gravedad dinámica
+
+      // Materiales físicos y rebote
+      const floorMat = new CANNON.Material('floor');
+      const diceMat = new CANNON.Material('dice');
+      const contactMat = new CANNON.ContactMaterial(floorMat, diceMat, {
+        friction: 0.25,
+        restitution: 0.45 // Rebote elástico convincente
+      });
+      world.addContactMaterial(contactMat);
+
+      // Suelo físico y visual
+      const groundBody = new CANNON.Body({ mass: 0, material: floorMat });
+      groundBody.addShape(new CANNON.Plane());
+      groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+      world.addBody(groundBody);
+
+      const groundGeo = new THREE.PlaneGeometry(50, 50);
+      const groundMeshMat = new THREE.ShadowMaterial({ opacity: 0.5 });
+      const groundMesh = new THREE.Mesh(groundGeo, groundMeshMat);
+      groundMesh.rotation.x = -Math.PI / 2;
+      groundMesh.receiveShadow = true;
+      scene.add(groundMesh);
+
+      // Paredes invisibles para mantener el dado dentro de la pantalla del iPhone
+      createBoundary(0, 0, 4.5, Math.PI);      // Abajo
+      createBoundary(0, 0, -4.5, 0);           // Arriba
+      createBoundary(4, 0, 0, -Math.PI / 2);   // Derecha
+      createBoundary(-4, 0, 0, Math.PI / 2);   // Izquierda
+
+      // 3. Crear el D20
+      createD20(diceMat);
+
+      // Eventos
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('pointerdown', throwDice);
+
+      // Lanzamiento inicial
+      throwDice();
+
+      animate();
+    }
+
+    function createBoundary(x, y, z, rotY) {
+      const wall = new CANNON.Body({ mass: 0 });
+      wall.addShape(new CANNON.Plane());
+      wall.position.set(x, y, z);
+      wall.quaternion.setFromEuler(0, rotY, 0);
+      world.addBody(wall);
+    }
+
+    function createD20(material) {
+      const baseGeo = new THREE.IcosahedronGeometry(RADIUS, 0);
+      
+      // Preparar geometría de Cannon
+      const pos = baseGeo.attributes.position.array;
+      const vertices = [];
+      for (let i = 0; i < pos.length; i += 3) {
+        vertices.push(new CANNON.Vec3(pos[i], pos[i+1], pos[i+2]));
+      }
+
+      // 20 caras del icosaedro
+      const faces = [];
+      for (let i = 0; i < pos.length / 9; i++) {
+        faces.push([i * 3, i * 3 + 1, i * 3 + 2]);
+      }
+
+      const shape = new CANNON.ConvexPolyhedron({ vertices, faces });
+      diceBody = new CANNON.Body({ mass: 4, material: material });
+      diceBody.addShape(shape);
+      diceBody.linearDamping = 0.25;
+      diceBody.angularDamping = 0.25;
+      world.addBody(diceBody);
+
+      // Mapeo UV individual para mostrar los 20 números
+      const materials = [];
+      const nonIndexedGeo = baseGeo.toNonIndexed();
+      const uvs = [];
+
+      for (let i = 0; i < 20; i++) {
+        materials.push(new THREE.MeshStandardMaterial({
+          map: createFaceTexture(i + 1),
+          roughness: 0.2,
+          metalness: 0.1,
+          bumpScale: 0.05
+        }));
+        
+        // Coordenadas para encajar el triángulo equilátero en la textura cuadrada
+        uvs.push(0.5, 0.95);
+        uvs.push(0.05, 0.1);
+        uvs.push(0.95, 0.1);
+
+        nonIndexedGeo.addGroup(i * 3, 3, i);
+      }
+
+      nonIndexedGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+      nonIndexedGeo.computeVertexNormals();
+
+      diceMesh = new THREE.Mesh(nonIndexedGeo, materials);
+      diceMesh.castShadow = true;
+      diceMesh.receiveShadow = true;
+      scene.add(diceMesh);
+    }
+
+    function throwDice() {
+      // Ocultar texto anterior
+      resultEl.classList.remove('show');
+      isRolling = true;
+
+      // Resetear posición arriba
+      diceBody.position.set(
+        (Math.random() - 0.5) * 1.5,
+        7 + Math.random() * 2,
+        (Math.random() - 0.5) * 1.5
+      );
+      
+      diceBody.velocity.set(
+        (Math.random() - 0.5) * 6,
+        -4,
+        (Math.random() - 0.5) * 6
+      );
+
+      // Rotación angular agresiva e impredecible
+      diceBody.angularVelocity.set(
+        (Math.random() - 0.5) * 35,
+        (Math.random() - 0.5) * 35,
+        (Math.random() - 0.5) * 35
+      );
+
+      // Vibración háptica en iPhone (si el dispositivo lo soporta)
+      if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function detectTopFace() {
+      const up = new THREE.Vector3(0, 1, 0);
+      let maxDot = -Infinity;
+      let winningFace = 1;
+
+      // Calcular qué normal apunta más hacia arriba (+Y)
+      const normalMatrix = new THREE.Matrix3().getNormalMatrix(diceMesh.matrixWorld);
+      const positionAttr = diceMesh.geometry.attributes.position;
+
+      for (let i = 0; i < 20; i++) {
+        const i3 = i * 3;
+        const vA = new THREE.Vector3().fromBufferAttribute(positionAttr, i3);
+        const vB = new THREE.Vector3().fromBufferAttribute(positionAttr, i3 + 1);
+        const vC = new THREE.Vector3().fromBufferAttribute(positionAttr, i3 + 2);
+
+        // Vector normal de la cara
+        const cb = new THREE.Vector3().subVectors(vC, vB);
+        const ab = new THREE.Vector3().subVectors(vA, vB);
+        const normal = cb.cross(ab).normalize();
+
+        normal.applyMatrix3(normalMatrix).normalize();
+        const dot = normal.dot(up);
+
+        if (dot > maxDot) {
+          maxDot = dot;
+          winningFace = i + 1;
+        }
+      }
+
+      return winningFace;
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // Loop de render y física
+    const timeStep = 1 / 60;
+    function animate() {
+      requestAnimationFrame(animate);
+
+      world.step(timeStep);
+
+      // Sincronizar Cannon-es con Three.js
+      diceMesh.position.copy(diceBody.position);
+      diceMesh.quaternion.copy(diceBody.quaternion);
+
+      // Comprobar si el dado se detuvo
+      if (isRolling) {
+        const speed = diceBody.velocity.length();
+        const angSpeed = diceBody.angularVelocity.length();
+        
+        // Criterio de reposo
+        if (speed < 0.08 && angSpeed < 0.08 && diceBody.position.y < RADIUS + 0.3) {
+          isRolling = false;
+          const res = detectTopFace();
+          resultEl.innerText = res;
+          resultEl.classList.add('show');
+          
+          if (navigator.vibrate) navigator.vibrate([15, 30, 20]);
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
