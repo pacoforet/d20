@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>D20 Dice Roller 3D</title>
+  <title>D20</title>
 
   <!-- PWA & Mobile Web App Settings for iPhone / Android -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,32 +12,31 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="D20">
   <meta name="format-detection" content="telephone=no">
-  <meta name="theme-color" content="#090b10">
+  <meta name="theme-color" content="#0c0d10">
 
-  <!-- Apple Touch Icon (180x180 PNG required for iOS Home Screen) -->
+  <!-- Apple Touch Icon (180x180 PNG for iOS Home Screen) -->
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
-  <!-- Standard Favicons & Web App Manifest -->
+  <!-- Favicon & Web App Manifest -->
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- Google Font: Cinzel (RPG / Tabletop Style) -->
+  <!-- Modern Clean Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg-dark: #090b10;
-      --gold-primary: #f6c85f;
-      --gold-glow: rgba(246, 200, 95, 0.45);
-      --red-fail: #e63946;
-      --text-main: #f0f3f8;
-      --text-muted: rgba(240, 243, 248, 0.65);
-      --glass-bg: rgba(18, 22, 34, 0.78);
-      --glass-border: rgba(255, 255, 255, 0.12);
+      --bg: #0c0d10;
+      --surface: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f3f4f6;
+      --text-dim: #717682;
+      --accent-gold: #e5b95f;
+      --accent-red: #e05252;
     }
 
     * {
@@ -55,9 +54,10 @@
       overflow: hidden;
       overscroll-behavior: none;
       -webkit-overflow-scrolling: touch;
-      background-color: var(--bg-dark);
+      background-color: var(--bg);
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: var(--text-main);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
     }
 
     #canvas-container {
@@ -75,12 +75,12 @@
       cursor: grabbing;
     }
 
-    /* Top Navigation Header */
+    /* Minimal Top Navigation */
     #top-bar {
       position: absolute;
-      top: env(safe-area-inset-top, 16px);
-      left: 16px;
-      right: 16px;
+      top: env(safe-area-inset-top, 20px);
+      left: 20px;
+      right: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -88,303 +88,254 @@
       z-index: 10;
     }
 
-    .glass-panel {
-      background: var(--glass-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--glass-border);
-      border-radius: 14px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-      pointer-events: auto;
+    .brand {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      opacity: 0.85;
     }
 
-    .brand {
+    .controls {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 8px 16px;
-      font-family: 'Cinzel', serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      color: var(--gold-primary);
-    }
-
-    .brand span {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      font-family: 'Inter', sans-serif;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-      margin-left: 2px;
-    }
-
-    .controls-cluster {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .icon-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      color: var(--text-main);
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 1.15rem;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: auto;
     }
 
-    .icon-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-      transform: translateY(-1px);
+    .btn-minimal {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: var(--text);
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
     }
 
-    .icon-btn:active {
-      transform: scale(0.94);
+    .btn-minimal:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.18);
     }
 
-    /* Roll History Pill Bar */
-    #history-container {
+    .btn-minimal:active {
+      transform: scale(0.92);
+    }
+
+    /* Subtle History Tracker */
+    #history-row {
       position: absolute;
-      top: calc(env(safe-area-inset-top, 16px) + 54px);
+      top: calc(env(safe-area-inset-top, 20px) + 54px);
       left: 0;
       right: 0;
       display: flex;
       justify-content: center;
-      gap: 8px;
+      gap: 12px;
       pointer-events: none;
       z-index: 10;
-      padding: 0 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-dim);
     }
 
-    .history-pill {
-      min-width: 34px;
-      height: 34px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 8px;
-      border-radius: 10px;
-      font-family: 'Cinzel', serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      background: rgba(14, 18, 28, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      color: var(--text-muted);
-      animation: pillFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    .hist-item {
+      opacity: 0.45;
+      transition: opacity 0.3s ease;
     }
 
-    .history-pill.nat20 {
-      background: linear-gradient(135deg, rgba(246, 200, 95, 0.35), rgba(184, 134, 11, 0.2));
-      border-color: var(--gold-primary);
-      color: #ffeaa7;
-      box-shadow: 0 0 12px var(--gold-glow);
+    .hist-item:first-child {
+      opacity: 1;
+      color: var(--text);
+      font-weight: 600;
     }
 
-    .history-pill.nat1 {
-      background: linear-gradient(135deg, rgba(230, 57, 70, 0.35), rgba(139, 0, 0, 0.2));
-      border-color: var(--red-fail);
-      color: #ffb4b4;
+    .hist-item.nat20 {
+      color: var(--accent-gold);
     }
 
-    .history-pill.latest {
-      transform: scale(1.08);
-      border-color: rgba(255, 255, 255, 0.35);
-      color: #ffffff;
+    .hist-item.nat1 {
+      color: var(--accent-red);
     }
 
-    @keyframes pillFadeIn {
-      from { opacity: 0; transform: scale(0.7) translateY(-6px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    /* Result Center Overlay */
-    #result-overlay {
+    /* Minimal Result Display */
+    #result-container {
       position: absolute;
-      top: 42%;
+      top: 38%;
       left: 50%;
       transform: translate(-50%, -50%);
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       pointer-events: none;
       z-index: 15;
       text-align: center;
     }
 
     #result-number {
-      font-family: 'Cinzel', serif;
-      font-size: 8rem;
-      font-weight: 900;
+      font-size: 7.5rem;
+      font-weight: 800;
+      letter-spacing: -2px;
       line-height: 1;
-      color: #ffffff;
-      text-shadow: 0 6px 28px rgba(0, 0, 0, 0.85);
+      color: var(--text);
       opacity: 0;
-      transform: scale(0.5) translateY(20px);
-      transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform: scale(0.85);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      font-variant-numeric: tabular-nums;
     }
 
     #result-number.show {
-      opacity: 1;
-      transform: scale(1) translateY(0);
+      opacity: 0.95;
+      transform: scale(1);
     }
 
-    #result-badge {
+    #result-label {
       margin-top: 8px;
-      font-family: 'Cinzel', serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 3px;
       text-transform: uppercase;
-      padding: 6px 18px;
-      border-radius: 20px;
       opacity: 0;
-      transform: translateY(12px);
-      transition: all 0.3s ease 0.1s;
+      transition: opacity 0.3s ease 0.08s;
+      color: var(--text-dim);
     }
 
-    #result-badge.show {
-      opacity: 1;
-      transform: translateY(0);
+    #result-label.show {
+      opacity: 0.9;
     }
 
-    #result-badge.nat20 {
-      background: linear-gradient(135deg, #f6c85f, #d4af37);
-      color: #261501;
-      box-shadow: 0 0 24px rgba(246, 200, 95, 0.65);
+    #result-label.gold {
+      color: var(--accent-gold);
     }
 
-    #result-badge.nat1 {
-      background: linear-gradient(135deg, #e63946, #9b111e);
-      color: #ffffff;
-      box-shadow: 0 0 24px rgba(230, 57, 70, 0.65);
+    #result-label.red {
+      color: var(--accent-red);
     }
 
-    #result-badge.standard {
-      background: rgba(18, 22, 34, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: var(--text-muted);
-    }
-
-    /* Bottom Action Controls */
+    /* Minimal Bottom Action Pill */
     #bottom-bar {
       position: absolute;
-      bottom: calc(env(safe-area-inset-bottom, 20px) + 16px);
-      left: 16px;
-      right: 16px;
+      bottom: calc(env(safe-area-inset-bottom, 24px) + 20px);
+      left: 0;
+      right: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       pointer-events: none;
       z-index: 10;
     }
 
-    #roll-btn {
+    #roll-pill {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      padding: 16px 36px;
-      border: none;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #c02424, #8b0000);
-      box-shadow: 0 8px 24px rgba(192, 36, 36, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.35);
-      color: #ffffff;
-      font-family: 'Cinzel', serif;
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: 2px;
+      padding: 14px 44px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
       cursor: pointer;
       pointer-events: auto;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
     }
 
-    #roll-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 28px rgba(192, 36, 36, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+    #roll-pill:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
     }
 
-    #roll-btn:active {
-      transform: scale(0.97);
+    #roll-pill:active {
+      transform: scale(0.96);
     }
 
-    #instruction {
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 0.85rem;
+    #hint {
+      font-size: 0.78rem;
+      color: var(--text-dim);
       letter-spacing: 0.5px;
-      pointer-events: none;
+      opacity: 0.7;
     }
 
-    /* Theme Picker Dropdown */
-    #theme-menu {
+    /* Minimal Theme Menu */
+    #theme-popover {
       position: absolute;
-      top: calc(env(safe-area-inset-top, 16px) + 50px);
-      right: 16px;
-      background: rgba(15, 18, 28, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
+      top: calc(env(safe-area-inset-top, 20px) + 48px);
+      right: 20px;
+      background: rgba(18, 20, 26, 0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 8px;
+      padding: 6px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-      z-index: 20;
+      gap: 2px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+      z-index: 25;
       opacity: 0;
       pointer-events: none;
-      transform: translateY(-8px);
+      transform: translateY(-6px);
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      min-width: 140px;
     }
 
-    #theme-menu.open {
+    #theme-popover.open {
       opacity: 1;
       pointer-events: auto;
       transform: translateY(0);
     }
 
-    .theme-opt {
+    .theme-item {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 10px 14px;
-      border-radius: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 500;
-      color: var(--text-main);
-      transition: background 0.15s ease;
+      color: var(--text-dim);
+      transition: all 0.15s ease;
     }
 
-    .theme-opt:hover {
-      background: rgba(255, 255, 255, 0.1);
+    .theme-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
     }
 
-    .theme-opt.active {
-      background: rgba(255, 255, 255, 0.15);
-      color: var(--gold-primary);
+    .theme-item.active {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
     }
 
-    .theme-dot {
-      width: 14px;
-      height: 14px;
+    .swatch {
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    /* Screen Flash FX for Nat 20 / Nat 1 */
-    #fx-flash {
+    /* Subtle ambient flash for 20/1 */
+    #ambient-glow {
       position: fixed;
       top: 0;
       left: 0;
@@ -392,17 +343,17 @@
       height: 100%;
       pointer-events: none;
       opacity: 0;
-      z-index: 30;
-      transition: opacity 0.5s ease-out;
+      z-index: 5;
+      transition: opacity 0.6s ease;
     }
 
-    #fx-flash.gold {
-      background: radial-gradient(circle, rgba(246, 200, 95, 0.35) 0%, rgba(246, 200, 95, 0) 70%);
+    #ambient-glow.gold {
+      background: radial-gradient(circle at center, rgba(229, 185, 95, 0.15) 0%, transparent 65%);
       opacity: 1;
     }
 
-    #fx-flash.red {
-      background: radial-gradient(circle, rgba(230, 57, 70, 0.35) 0%, rgba(230, 57, 70, 0) 70%);
+    #ambient-glow.red {
+      background: radial-gradient(circle at center, rgba(224, 82, 82, 0.15) 0%, transparent 65%);
       opacity: 1;
     }
   </style>
@@ -413,69 +364,63 @@
 </head>
 <body>
 
-  <div id="fx-flash"></div>
+  <div id="ambient-glow"></div>
 
-  <!-- Top Navigation Header -->
+  <!-- Header -->
   <div id="top-bar">
-    <div class="glass-panel brand">
-      🎲 D20 <span>PRO</span>
-    </div>
-    <div class="controls-cluster">
-      <button id="sound-btn" class="icon-btn" title="Activar/Desactivar Sonido">🔊</button>
-      <button id="theme-btn" class="icon-btn" title="Cambiar Tema de Dado">🎨</button>
+    <div class="brand">d20</div>
+    <div class="controls">
+      <button id="sound-btn" class="btn-minimal" title="Sonido">🔊</button>
+      <button id="theme-btn" class="btn-minimal" title="Tema">●</button>
     </div>
   </div>
 
-  <!-- Theme Selector Menu -->
-  <div id="theme-menu">
-    <div class="theme-opt active" data-theme="ruby">
-      <div class="theme-dot" style="background: linear-gradient(135deg, #a01526, #480a10);"></div>
-      Dragon Ruby (Rojo Rubí)
+  <!-- Minimal Theme Popover -->
+  <div id="theme-popover">
+    <div class="theme-item active" data-theme="obsidian">
+      <div class="swatch" style="background: #181a20;"></div>
+      Obsidian
     </div>
-    <div class="theme-opt" data-theme="amethyst">
-      <div class="theme-dot" style="background: linear-gradient(135deg, #6c2bd9, #2e0854);"></div>
-      Arcane Amethyst (Púrpura)
+    <div class="theme-item" data-theme="alabaster">
+      <div class="swatch" style="background: #e8e6df;"></div>
+      Alabaster
     </div>
-    <div class="theme-opt" data-theme="emerald">
-      <div class="theme-dot" style="background: linear-gradient(135deg, #107040, #042e18);"></div>
-      Elven Jade (Esmeralda)
+    <div class="theme-item" data-theme="bordeaux">
+      <div class="swatch" style="background: #4a151b;"></div>
+      Bordeaux
     </div>
-    <div class="theme-opt" data-theme="obsidian">
-      <div class="theme-dot" style="background: linear-gradient(135deg, #2b303c, #111317);"></div>
-      Obsidian Knight (Obsidiana)
-    </div>
-    <div class="theme-opt" data-theme="frost">
-      <div class="theme-dot" style="background: linear-gradient(135deg, #0284c7, #082f49);"></div>
-      Glacial Frost (Escarcha)
+    <div class="theme-item" data-theme="sage">
+      <div class="swatch" style="background: #24352b;"></div>
+      Sage
     </div>
   </div>
 
-  <!-- Roll History Bar -->
-  <div id="history-container"></div>
+  <!-- Recent Rolls Row -->
+  <div id="history-row"></div>
 
-  <!-- Result Center Overlay -->
-  <div id="result-overlay">
+  <!-- Center Result Overlay -->
+  <div id="result-container">
     <div id="result-number">--</div>
-    <div id="result-badge">TIRADA</div>
+    <div id="result-label"></div>
   </div>
 
-  <!-- Bottom Trigger Controls -->
+  <!-- Bottom Trigger -->
   <div id="bottom-bar">
-    <button id="roll-btn">LANZAR DADO</button>
-    <div id="instruction">Arrastra para lanzar con fuerza, toca la pantalla o pulsa Espacio</div>
+    <button id="roll-pill">Roll</button>
+    <div id="hint">Arrastra o toca para lanzar</div>
   </div>
 
   <div id="canvas-container"></div>
 
   <script>
     /* ==========================================================================
-       D20 AUDIO ENGINE (Synthesized via Web Audio API - Zero External Dependencies)
+       TACTILE ACOUSTIC AUDIO ENGINE (Zero Assets, Muted Minimalist Acoustic Clicks)
        ========================================================================== */
-    class DiceAudioEngine {
+    class MinimalAudio {
       constructor() {
         this.ctx = null;
         this.muted = localStorage.getItem('d20_muted') === 'true';
-        this.lastSoundTime = 0;
+        this.lastTime = 0;
       }
 
       init() {
@@ -490,31 +435,31 @@
         }
       }
 
-      toggleMute() {
+      toggle() {
         this.muted = !this.muted;
         localStorage.setItem('d20_muted', this.muted);
         return !this.muted;
       }
 
-      // Realistic plastic/acrylic dice clatter sound
-      playHit(velocity) {
+      // Dry, realistic ceramic/resin impact clack
+      hit(velocity) {
         if (this.muted) return;
         this.init();
         if (!this.ctx) return;
 
         const now = this.ctx.currentTime;
-        if (now - this.lastSoundTime < 0.04) return;
-        this.lastSoundTime = now;
+        if (now - this.lastTime < 0.04) return;
+        this.lastTime = now;
 
-        const volume = Math.min(1.0, Math.max(0.06, velocity / 12));
-        const pitch = 1350 + Math.random() * 450 + (velocity * 20);
+        const vol = Math.min(0.8, Math.max(0.04, velocity / 14));
+        const freq = 1200 + Math.random() * 300;
 
-        // Sharp acrylic click transient
-        const bufferSize = Math.floor(this.ctx.sampleRate * 0.035);
+        // Transient click
+        const bufferSize = Math.floor(this.ctx.sampleRate * 0.025);
         const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
-          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.22));
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.2));
         }
 
         const noise = this.ctx.createBufferSource();
@@ -522,187 +467,129 @@
 
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(pitch, now);
-        filter.Q.setValueAtTime(5.5, now);
+        filter.frequency.setValueAtTime(freq, now);
+        filter.Q.setValueAtTime(5.0, now);
 
         const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(volume * 0.65, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        gain.gain.setValueAtTime(vol * 0.5, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
 
         noise.connect(filter);
         filter.connect(gain);
         gain.connect(this.ctx.destination);
         noise.start(now);
 
-        // Table surface resonance thud
+        // Desk mat thud
         const osc = this.ctx.createOscillator();
         const oscGain = this.ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(220 + Math.random() * 60, now);
-        osc.frequency.exponentialRampToValueAtTime(75, now + 0.07);
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.05);
 
-        oscGain.gain.setValueAtTime(volume * 0.45, now);
-        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+        oscGain.gain.setValueAtTime(vol * 0.35, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.055);
 
         osc.connect(oscGain);
         oscGain.connect(this.ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.075);
+        osc.stop(now + 0.06);
       }
 
-      // Natural 20 Triumphant Fanfare
-      playNat20() {
-        if (this.muted) return;
-        this.init();
-        if (!this.ctx) return;
-
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 - E5 - G5 - C6
-        notes.forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          const start = this.ctx.currentTime + (idx * 0.09);
-
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, start);
-
-          gain.gain.setValueAtTime(0, start);
-          gain.gain.linearRampToValueAtTime(0.28, start + 0.035);
-          gain.gain.exponentialRampToValueAtTime(0.001, start + 0.65);
-
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(start);
-          osc.stop(start + 0.7);
-        });
-      }
-
-      // Natural 1 Critical Fail Thud
-      playNat1() {
+      // Quiet, elegant chime for Nat 20
+      nat20() {
         if (this.muted) return;
         this.init();
         if (!this.ctx) return;
 
         const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+        [587.33, 880.00].forEach((f, i) => { // D5, A5
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const t = now + i * 0.1;
 
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(130, now);
-        osc.frequency.exponentialRampToValueAtTime(40, now + 0.5);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, t);
 
-        gain.gain.setValueAtTime(0.32, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+          gain.gain.setValueAtTime(0, t);
+          gain.gain.linearRampToValueAtTime(0.18, t + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
 
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.52);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.75);
+        });
       }
     }
 
     /* ==========================================================================
-       THEMES CONFIGURATION (PBR Materials, Swirls, Foils)
+       MINIMALIST THEMES (Architectural, Matte, Refined)
        ========================================================================== */
     const THEMES = {
-      ruby: {
-        name: 'Dragon Ruby',
-        bgDark: '#3d060c',
-        bgMid: '#82101b',
-        bgLight: '#b8202d',
-        stroke: '#240206',
-        numberColor: '#fce38a',
-        metalness: 0.12,
-        roughness: 0.16,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.08,
-        buttonBg: 'linear-gradient(135deg, #c02424, #8b0000)'
-      },
-      amethyst: {
-        name: 'Arcane Amethyst',
-        bgDark: '#1c0633',
-        bgMid: '#451a8a',
-        bgLight: '#7434db',
-        stroke: '#100220',
-        numberColor: '#e0e7ff',
-        metalness: 0.18,
-        roughness: 0.14,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.06,
-        buttonBg: 'linear-gradient(135deg, #7c3aed, #4c1d95)'
-      },
-      emerald: {
-        name: 'Elven Jade',
-        bgDark: '#042211',
-        bgMid: '#065740',
-        bgLight: '#10a876',
-        stroke: '#021509',
-        numberColor: '#fef08a',
-        metalness: 0.14,
-        roughness: 0.18,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.08,
-        buttonBg: 'linear-gradient(135deg, #059669, #064e3b)'
-      },
       obsidian: {
-        name: 'Obsidian Knight',
-        bgDark: '#101217',
-        bgMid: '#1a1f2b',
-        bgLight: '#2e3547',
-        stroke: '#08090d',
-        numberColor: '#fb923c',
-        metalness: 0.35,
-        roughness: 0.22,
-        clearcoat: 0.9,
-        clearcoatRoughness: 0.1,
-        buttonBg: 'linear-gradient(135deg, #ea580c, #9a3412)'
+        bodyColor: '#181a20',
+        strokeColor: '#101115',
+        textColor: '#f3f4f6',
+        roughness: 0.28,
+        metalness: 0.05,
+        clearcoat: 0.45
       },
-      frost: {
-        name: 'Glacial Frost',
-        bgDark: '#06263b',
-        bgMid: '#027bb8',
-        bgLight: '#38bdf8',
-        stroke: '#031724',
-        numberColor: '#ffffff',
-        metalness: 0.1,
-        roughness: 0.12,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.05,
-        buttonBg: 'linear-gradient(135deg, #0284c7, #0369a1)'
+      alabaster: {
+        bodyColor: '#e8e6df',
+        strokeColor: '#d6d3c8',
+        textColor: '#18191c',
+        roughness: 0.32,
+        metalness: 0.02,
+        clearcoat: 0.35
+      },
+      bordeaux: {
+        bodyColor: '#3c1217',
+        strokeColor: '#25070b',
+        textColor: '#f7ede8',
+        roughness: 0.26,
+        metalness: 0.06,
+        clearcoat: 0.5
+      },
+      sage: {
+        bodyColor: '#202e26',
+        strokeColor: '#131e17',
+        textColor: '#edf3ee',
+        roughness: 0.3,
+        metalness: 0.04,
+        clearcoat: 0.4
       }
     };
 
     /* ==========================================================================
-       MAIN ENGINE & RENDER PIPELINE
+       CORE 3D & PHYSICS ENGINE
        ========================================================================== */
-    const RADIUS = 1.9;
+    const RADIUS = 1.85;
     let scene, camera, renderer, world, clock;
     let diceBody, diceMesh;
     let isRolling = false;
     let rollStartTime = 0;
-    let currentThemeKey = localStorage.getItem('d20_theme') || 'ruby';
-    let currentTheme = THEMES[currentThemeKey] || THEMES.ruby;
-    const audioEngine = new DiceAudioEngine();
-    let rollHistory = [];
-
-    // Opposite faces summing to 21 mapping
+    let currentThemeKey = localStorage.getItem('d20_theme') || 'obsidian';
+    let currentTheme = THEMES[currentThemeKey] || THEMES.obsidian;
+    const audio = new MinimalAudio();
+    let history = [];
     let faceNumberMapping = [];
 
-    // Pointer gesture state
-    let pointerDownPos = null;
-    let pointerDownTime = 0;
+    // Pointer gesture
+    let pointerStart = null;
+    let pointerStartTime = 0;
 
-    // DOM References
-    const resultNumberEl = document.getElementById('result-number');
-    const resultBadgeEl = document.getElementById('result-badge');
-    const historyContainerEl = document.getElementById('history-container');
-    const fxFlashEl = document.getElementById('fx-flash');
+    // Elements
+    const resultNumEl = document.getElementById('result-number');
+    const resultLabelEl = document.getElementById('result-label');
+    const historyRowEl = document.getElementById('history-row');
+    const glowEl = document.getElementById('ambient-glow');
     const soundBtn = document.getElementById('sound-btn');
     const themeBtn = document.getElementById('theme-btn');
-    const themeMenu = document.getElementById('theme-menu');
-    const rollBtn = document.getElementById('roll-btn');
+    const themePopover = document.getElementById('theme-popover');
+    const rollPill = document.getElementById('roll-pill');
 
-    /* --- Dynamic Face Texture Generator with Exact Projected Vertex Boundaries --- */
-    function createFaceCanvas(number, theme, polyPoints, isBump = false) {
+    /* --- Texture Generation (Crisp Modern Debossed Typography) --- */
+    function createFaceCanvas(number, theme, polyPts) {
       const size = 512;
       const canvas = document.createElement('canvas');
       canvas.width = size;
@@ -712,161 +599,76 @@
       const cx = size / 2;
       const cy = size / 2;
 
-      // Convert UV polyPoints (0..1) to Canvas pixel coordinates (0..512)
-      // Note: canvas Y is inverted relative to UV V (V=1 is Y=0)
-      const pts = polyPoints.map(p => ({
+      // Base Facet Color
+      ctx.fillStyle = theme.bodyColor;
+      ctx.fillRect(0, 0, size, size);
+
+      // Convert UV polyPts to canvas space (Y flipped)
+      const pts = polyPts.map(p => ({
         x: p.u * size,
         y: (1 - p.v) * size
       }));
 
-      if (isBump) {
-        // Neutral gray for bump base
-        ctx.fillStyle = '#808080';
-        ctx.fillRect(0, 0, size, size);
+      // Subtle Facet Chamfer Border
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      ctx.lineTo(pts[1].x, pts[1].y);
+      ctx.lineTo(pts[2].x, pts[2].y);
+      ctx.closePath();
+      ctx.strokeStyle = theme.strokeColor;
+      ctx.lineWidth = 14;
+      ctx.stroke();
 
-        // Recessed triangle face
+      // Clean Modern Debossed Number (Inter font)
+      ctx.font = '700 155px "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Subtle deboss shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.fillText(number.toString(), cx, cy + 20);
+
+      // Clean Top Rim
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillText(number.toString(), cx, cy + 14);
+
+      // Main Text Fill
+      ctx.fillStyle = theme.textColor;
+      ctx.fillText(number.toString(), cx, cy + 17);
+
+      // Discreet dot for 6 and 9
+      if (number === 6 || number === 9) {
         ctx.beginPath();
-        ctx.moveTo(pts[0].x, pts[0].y);
-        ctx.lineTo(pts[1].x, pts[1].y);
-        ctx.lineTo(pts[2].x, pts[2].y);
-        ctx.closePath();
-        ctx.fillStyle = '#6e6e6e';
+        ctx.arc(cx, cy + 78, 6, 0, Math.PI * 2);
+        ctx.fillStyle = theme.textColor;
         ctx.fill();
-
-        // Engraved deep groove for number
-        ctx.font = '900 145px "Cinzel", serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#222222';
-        ctx.fillText(number.toString(), cx, cy + 18);
-
-        if (number === 6 || number === 9) {
-          ctx.fillRect(cx - 36, cy + 88, 72, 10);
-        }
-      } else {
-        // 1. Swirled Gemstone Gradient Base
-        const grad = ctx.createRadialGradient(cx, cy * 0.75, 15, cx, cy, size * 0.55);
-        grad.addColorStop(0, theme.bgLight);
-        grad.addColorStop(0.6, theme.bgMid);
-        grad.addColorStop(1, theme.bgDark);
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, size, size);
-
-        // Marble veins
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
-        ctx.lineWidth = 3;
-        for (let i = 0; i < 3; i++) {
-          ctx.beginPath();
-          ctx.moveTo(Math.random() * size, 0);
-          ctx.bezierCurveTo(Math.random() * size, size * 0.4, Math.random() * size, size * 0.6, Math.random() * size, size);
-          ctx.stroke();
-        }
-
-        // 2. Exact Triangle Face Border (matches 3D facets seamlessly)
-        ctx.beginPath();
-        ctx.moveTo(pts[0].x, pts[0].y);
-        ctx.lineTo(pts[1].x, pts[1].y);
-        ctx.lineTo(pts[2].x, pts[2].y);
-        ctx.closePath();
-
-        ctx.strokeStyle = theme.stroke;
-        ctx.lineWidth = 18;
-        ctx.stroke();
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-
-        // 3. Engraved Metallic Leaf Typography
-        ctx.font = '900 145px "Cinzel", serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // Deep shadow for engraved look
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.78)';
-        ctx.fillText(number.toString(), cx, cy + 22);
-
-        // Top-edge light catch
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.fillText(number.toString(), cx, cy + 14);
-
-        // Main Metallic Fill
-        ctx.fillStyle = theme.numberColor;
-        ctx.fillText(number.toString(), cx, cy + 18);
-
-        // Underline identifier for 6 and 9
-        if (number === 6 || number === 9) {
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-          ctx.fillRect(cx - 36, cy + 90, 72, 10);
-          ctx.fillStyle = theme.numberColor;
-          ctx.fillRect(cx - 36, cy + 87, 72, 9);
-        }
       }
 
       return canvas;
     }
 
-    /* --- Procedural Studio Lighting Environment --- */
-    function createStudioEnvironment() {
-      const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256);
-      const cubeCamera = new THREE.CubeCamera(0.1, 50, cubeRenderTarget);
-      const envScene = new THREE.Scene();
-      envScene.background = new THREE.Color(0x131620);
-
-      // Overhead softbox panel
-      const topLight = new THREE.Mesh(
-        new THREE.PlaneGeometry(18, 18),
-        new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
-      );
-      topLight.position.set(0, 10, 0);
-      topLight.rotation.x = Math.PI / 2;
-      envScene.add(topLight);
-
-      // Warm side panel
-      const warmLight = new THREE.Mesh(
-        new THREE.PlaneGeometry(12, 12),
-        new THREE.MeshBasicMaterial({ color: 0xffedd5, side: THREE.DoubleSide })
-      );
-      warmLight.position.set(9, 4, 8);
-      warmLight.lookAt(0, 0, 0);
-      envScene.add(warmLight);
-
-      // Cool rim panel
-      const coolLight = new THREE.Mesh(
-        new THREE.PlaneGeometry(12, 12),
-        new THREE.MeshBasicMaterial({ color: 0x93c5fd, side: THREE.DoubleSide })
-      );
-      coolLight.position.set(-9, 3, -8);
-      coolLight.lookAt(0, 0, 0);
-      envScene.add(coolLight);
-
-      cubeCamera.update(renderer, envScene);
-      return cubeRenderTarget.texture;
-    }
-
-    /* --- D20 Geometry, Opposite Pair Matching & UV Construction --- */
+    /* --- D20 Geometry Setup --- */
     function setupD20Mesh(theme) {
       if (diceMesh) {
         scene.remove(diceMesh);
       }
 
-      const baseGeo = new THREE.IcosahedronGeometry(RADIUS, 0);
-      const nonIndexed = baseGeo.toNonIndexed();
-      const posAttr = nonIndexed.attributes.position;
+      const geo = new THREE.IcosahedronGeometry(RADIUS, 0);
+      const pos = geo.attributes.position;
 
-      // 1. Gather all 20 face centers and normals
+      // Identify 20 face centers and normals
       const faceNormals = [];
       for (let f = 0; f < 20; f++) {
         const i3 = f * 3;
-        const vA = new THREE.Vector3().fromBufferAttribute(posAttr, i3);
-        const vB = new THREE.Vector3().fromBufferAttribute(posAttr, i3 + 1);
-        const vC = new THREE.Vector3().fromBufferAttribute(posAttr, i3 + 2);
+        const vA = new THREE.Vector3().fromBufferAttribute(pos, i3);
+        const vB = new THREE.Vector3().fromBufferAttribute(pos, i3 + 1);
+        const vC = new THREE.Vector3().fromBufferAttribute(pos, i3 + 2);
         const center = new THREE.Vector3().add(vA).add(vB).add(vC).divideScalar(3);
         const normal = center.clone().normalize();
         faceNormals.push({ index: f, center, normal, paired: false });
       }
 
-      // Pair opposite faces (sum to 21)
+      // Standard D20 pairings (sum to 21)
       const pairs = [
         [20, 1], [19, 2], [18, 3], [17, 4], [16, 5],
         [15, 6], [14, 7], [13, 8], [12, 9], [11, 10]
@@ -900,19 +702,18 @@
         pairIdx++;
       }
 
-      // 2. Construct UVs and materials with upright orientation
+      // Upright UVs and materials
       const materials = [];
       const uvs = [];
 
       for (let f = 0; f < 20; f++) {
         const num = faceNumberMapping[f];
         const i3 = f * 3;
-        const vA = new THREE.Vector3().fromBufferAttribute(posAttr, i3);
-        const vB = new THREE.Vector3().fromBufferAttribute(posAttr, i3 + 1);
-        const vC = new THREE.Vector3().fromBufferAttribute(posAttr, i3 + 2);
+        const vA = new THREE.Vector3().fromBufferAttribute(pos, i3);
+        const vB = new THREE.Vector3().fromBufferAttribute(pos, i3 + 1);
+        const vC = new THREE.Vector3().fromBufferAttribute(pos, i3 + 2);
         const n = faceNormals[f].normal;
 
-        // Calculate face local 2D coordinate system
         let wUp = new THREE.Vector3(0, 1, 0);
         if (Math.abs(n.dot(wUp)) > 0.95) {
           wUp = new THREE.Vector3(0, 0, 1);
@@ -930,83 +731,75 @@
         const maxDist = Math.max(...rawPts.map(p => Math.hypot(p.x, p.y))) || 1;
         const uvScale = 0.44;
 
-        // Calculate exact UVs for vertices
         const faceUVs = rawPts.map(p => ({
           u: 0.5 + (p.x / maxDist) * uvScale,
           v: 0.5 + (p.y / maxDist) * uvScale
         }));
 
-        faceUVs.forEach(p => {
-          uvs.push(p.u, p.v);
-        });
+        faceUVs.forEach(p => uvs.push(p.u, p.v));
 
-        // Generate customized canvas for this exact triangle geometry
-        const faceCanvas = createFaceCanvas(num, theme, faceUVs, false);
-        const bumpCanvas = createFaceCanvas(num, theme, faceUVs, true);
-
-        const mapTex = new THREE.CanvasTexture(faceCanvas);
-        const bumpTex = new THREE.CanvasTexture(bumpCanvas);
+        const canvas = createFaceCanvas(num, theme, faceUVs);
+        const map = new THREE.CanvasTexture(canvas);
+        map.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
         const mat = new THREE.MeshPhysicalMaterial({
-          map: mapTex,
-          bumpMap: bumpTex,
-          bumpScale: 0.05,
+          map: map,
           roughness: theme.roughness,
           metalness: theme.metalness,
           clearcoat: theme.clearcoat,
-          clearcoatRoughness: theme.clearcoatRoughness,
-          reflectivity: 0.95
+          clearcoatRoughness: 0.1
         });
         materials.push(mat);
 
-        nonIndexed.addGroup(f * 3, 3, f);
+        geo.addGroup(f * 3, 3, f);
       }
 
-      nonIndexed.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-      nonIndexed.computeVertexNormals();
+      geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+      geo.computeVertexNormals();
 
-      diceMesh = new THREE.Mesh(nonIndexed, materials);
+      diceMesh = new THREE.Mesh(geo, materials);
       diceMesh.castShadow = true;
       diceMesh.receiveShadow = true;
       scene.add(diceMesh);
     }
 
-    /* --- Cannon-es Physics World --- */
+    /* --- Physics Setup with Reliable Bounding Boxes --- */
     function setupPhysics() {
       world = new CANNON.World();
-      world.gravity.set(0, -38, 0);
+      world.gravity.set(0, -34, 0);
       world.allowSleep = true;
 
-      const feltMat = new CANNON.Material('felt');
+      const surfaceMat = new CANNON.Material('surface');
       const diceMat = new CANNON.Material('dice');
-      const contactMat = new CANNON.ContactMaterial(feltMat, diceMat, {
-        friction: 0.35,
-        restitution: 0.52
-      });
-      world.addContactMaterial(contactMat);
+      world.addContactMaterial(new CANNON.ContactMaterial(surfaceMat, diceMat, {
+        friction: 0.38,
+        restitution: 0.48
+      }));
 
-      // Floor
-      const floorBody = new CANNON.Body({ mass: 0, material: feltMat });
+      // 1. Table Floor Plane (Infinite at y=0)
+      const floorBody = new CANNON.Body({ mass: 0, material: surfaceMat });
       floorBody.addShape(new CANNON.Plane());
       floorBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
       world.addBody(floorBody);
 
-      // Cylindrical tray boundaries
-      const wallSegments = 12;
-      const trayRadius = 5.2;
-      for (let i = 0; i < wallSegments; i++) {
-        const angle = (i / wallSegments) * Math.PI * 2;
-        const wx = Math.cos(angle) * trayRadius;
-        const wz = Math.sin(angle) * trayRadius;
+      // 2. Finite Bounding Box Walls (keeps die safely on screen without trapping it)
+      const wallH = 10;
+      const wallThick = 1;
+      const bound = 5.2;
 
-        const wallBody = new CANNON.Body({ mass: 0, material: feltMat });
-        wallBody.addShape(new CANNON.Plane());
-        wallBody.position.set(wx, 0, wz);
-        wallBody.quaternion.setFromEuler(0, angle + Math.PI, 0);
-        world.addBody(wallBody);
+      function createWall(x, z, hx, hz) {
+        const wall = new CANNON.Body({ mass: 0, material: surfaceMat });
+        wall.addShape(new CANNON.Box(new CANNON.Vec3(hx, wallH, hz)));
+        wall.position.set(x, wallH, z);
+        world.addBody(wall);
       }
 
-      // Cannon Convex Polyhedron for D20
+      createWall(0, -bound, bound, wallThick); // North
+      createWall(0, bound, bound, wallThick);  // South
+      createWall(-bound, 0, wallThick, bound); // West
+      createWall(bound, 0, wallThick, bound);  // East
+
+      // 3. Convex Polyhedron for D20
       const baseGeo = new THREE.IcosahedronGeometry(RADIUS, 0);
       const pos = baseGeo.attributes.position.array;
       const vertices = [];
@@ -1021,74 +814,72 @@
 
       const shape = new CANNON.ConvexPolyhedron({ vertices, faces });
       diceBody = new CANNON.Body({
-        mass: 3.5,
+        mass: 3.2,
         material: diceMat,
-        linearDamping: 0.22,
-        angularDamping: 0.22
+        linearDamping: 0.2,
+        angularDamping: 0.2
       });
       diceBody.addShape(shape);
       world.addBody(diceBody);
 
-      // Collision Audio Event
+      // Collision Audio
       diceBody.addEventListener('collide', (e) => {
         const impact = e.contact.getImpactVelocityAlongNormal();
         if (impact > 0.4) {
-          audioEngine.playHit(impact);
-          if (navigator.vibrate && impact > 3.0) {
-            navigator.vibrate(8);
+          audio.hit(impact);
+          if (navigator.vibrate && impact > 4) {
+            navigator.vibrate(10);
           }
         }
       });
     }
 
-    /* --- Visual Tabletop Tray --- */
-    function createDiceTray() {
-      // Felt Floor
-      const floorGeo = new THREE.CylinderGeometry(5.4, 5.4, 0.2, 48);
-      const floorMat = new THREE.MeshStandardMaterial({
-        color: 0x10131d,
-        roughness: 0.85,
-        metalness: 0.05
-      });
-      const trayFloor = new THREE.Mesh(floorGeo, floorMat);
-      trayFloor.position.y = -0.1;
-      trayFloor.receiveShadow = true;
-      scene.add(trayFloor);
+    /* --- Clean Minimalist Surface & Lights --- */
+    function setupScene() {
+      // Soft Floor Shadow Plane
+      const shadowPlane = new THREE.Mesh(
+        new THREE.PlaneGeometry(30, 30),
+        new THREE.ShadowMaterial({ opacity: 0.28 })
+      );
+      shadowPlane.rotation.x = -Math.PI / 2;
+      shadowPlane.position.y = 0.001;
+      shadowPlane.receiveShadow = true;
+      scene.add(shadowPlane);
 
-      // Subtle Decorative Ring Accent
-      const ringGeo = new THREE.RingGeometry(5.0, 5.15, 64);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: 0x22293d,
-        side: THREE.DoubleSide
-      });
-      const innerRing = new THREE.Mesh(ringGeo, ringMat);
-      innerRing.rotation.x = -Math.PI / 2;
-      innerRing.position.y = 0.005;
-      scene.add(innerRing);
+      // Soft ambient light
+      const ambient = new THREE.AmbientLight(0xffffff, 0.72);
+      scene.add(ambient);
 
-      // Mahogany/Dark Brass Rim
-      const rimGeo = new THREE.TorusGeometry(5.35, 0.28, 16, 64);
-      const rimMat = new THREE.MeshStandardMaterial({
-        color: 0x241711,
-        metalness: 0.4,
-        roughness: 0.35
-      });
-      const rimMesh = new THREE.Mesh(rimGeo, rimMat);
-      rimMesh.rotation.x = Math.PI / 2;
-      rimMesh.position.y = 0.15;
-      rimMesh.castShadow = true;
-      rimMesh.receiveShadow = true;
-      scene.add(rimMesh);
+      // Primary Key Light with soft shadow
+      const keyLight = new THREE.DirectionalLight(0xffffff, 0.95);
+      keyLight.position.set(6, 14, 7);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.width = 2048;
+      keyLight.shadow.mapSize.height = 2048;
+      keyLight.shadow.camera.near = 1;
+      keyLight.shadow.camera.far = 30;
+      keyLight.shadow.camera.left = -6;
+      keyLight.shadow.camera.right = 6;
+      keyLight.shadow.camera.top = 6;
+      keyLight.shadow.camera.bottom = -6;
+      keyLight.shadow.bias = -0.0004;
+      keyLight.shadow.radius = 2;
+      scene.add(keyLight);
+
+      // Subtle cool fill light
+      const fillLight = new THREE.DirectionalLight(0xdce7f5, 0.35);
+      fillLight.position.set(-6, 8, -5);
+      scene.add(fillLight);
     }
 
-    /* --- Initialization --- */
+    /* --- Init Routine --- */
     function init() {
       clock = new THREE.Clock();
 
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
-      camera.position.set(0, 11, 10);
-      camera.lookAt(0, 0, 0);
+      camera.position.set(0, 10.5, 9.5);
+      camera.lookAt(0, 0.4, 0);
 
       renderer = new THREE.WebGLRenderer({
         antialias: true,
@@ -1099,81 +890,51 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.05;
       document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-      // Studio Lights
-      const ambient = new THREE.AmbientLight(0xffffff, 0.55);
-      scene.add(ambient);
-
-      const keyLight = new THREE.DirectionalLight(0xfff8f0, 1.4);
-      keyLight.position.set(6, 16, 7);
-      keyLight.castShadow = true;
-      keyLight.shadow.mapSize.width = 2048;
-      keyLight.shadow.mapSize.height = 2048;
-      keyLight.shadow.camera.near = 2;
-      keyLight.shadow.camera.far = 28;
-      keyLight.shadow.camera.left = -6;
-      keyLight.shadow.camera.right = 6;
-      keyLight.shadow.camera.top = 6;
-      keyLight.shadow.camera.bottom = -6;
-      keyLight.shadow.bias = -0.0004;
-      scene.add(keyLight);
-
-      const rimLight = new THREE.PointLight(0xa5c4fc, 1.1, 30);
-      rimLight.position.set(-7, 6, -6);
-      scene.add(rimLight);
-
-      // Studio Environment Map
-      scene.environment = createStudioEnvironment();
-
-      // Physics, Tray & Mesh
+      setupScene();
       setupPhysics();
-      createDiceTray();
       setupD20Mesh(currentTheme);
+      setupListeners();
 
-      // Setup Inputs
-      setupInteractions();
-
-      // Sound button status
-      soundBtn.innerText = audioEngine.muted ? '🔇' : '🔊';
+      soundBtn.innerText = audio.muted ? '🔇' : '🔊';
 
       // Initial roll
-      throwDice();
+      roll();
 
       animate();
     }
 
-    /* --- Interactive Throwing Mechanics --- */
-    function throwDice(impulseX = 0, impulseZ = 0) {
-      audioEngine.init();
+    /* --- Roll Mechanics --- */
+    function roll(impulseX = 0, impulseZ = 0) {
+      audio.init();
 
-      resultNumberEl.classList.remove('show');
-      resultBadgeEl.classList.remove('show');
-      fxFlashEl.className = '';
+      resultNumEl.classList.remove('show');
+      resultLabelEl.classList.remove('show');
+      glowEl.className = '';
 
       isRolling = true;
       rollStartTime = performance.now();
 
-      const spawnX = (Math.random() - 0.5) * 1.5;
-      const spawnZ = (Math.random() - 0.5) * 1.5;
-      diceBody.position.set(spawnX, 7.5 + Math.random() * 1.5, spawnZ);
+      // Spawn in center camera view
+      const sx = (Math.random() - 0.5) * 1.2;
+      const sz = (Math.random() - 0.5) * 1.2;
+      diceBody.position.set(sx, 4.8 + Math.random() * 0.8, sz);
 
-      const vx = impulseX ? impulseX * 0.04 : (Math.random() - 0.5) * 7;
-      const vz = impulseZ ? impulseZ * 0.04 : (Math.random() - 0.5) * 7;
-      diceBody.velocity.set(vx, -5.5 - Math.random() * 2, vz);
+      const vx = impulseX ? impulseX * 0.035 : (Math.random() - 0.5) * 6;
+      const vz = impulseZ ? impulseZ * 0.035 : (Math.random() - 0.5) * 6;
+      diceBody.velocity.set(vx, -4.5 - Math.random() * 1.5, vz);
 
       diceBody.angularVelocity.set(
-        (Math.random() - 0.5) * 38,
-        (Math.random() - 0.5) * 38,
-        (Math.random() - 0.5) * 38
+        (Math.random() - 0.5) * 32,
+        (Math.random() - 0.5) * 32,
+        (Math.random() - 0.5) * 32
       );
 
       diceBody.wakeUp();
 
       if (navigator.vibrate) {
-        navigator.vibrate(15);
+        navigator.vibrate(12);
       }
     }
 
@@ -1207,161 +968,154 @@
     function onDiceRest(result) {
       isRolling = false;
 
-      resultNumberEl.innerText = result;
-      resultNumberEl.classList.add('show');
+      resultNumEl.innerText = result;
+      resultNumEl.classList.add('show');
 
-      resultBadgeEl.className = '';
+      resultLabelEl.className = '';
       if (result === 20) {
-        resultBadgeEl.innerText = '¡CRÍTICO! NAT 20';
-        resultBadgeEl.classList.add('nat20', 'show');
-        fxFlashEl.className = 'gold';
-        audioEngine.playNat20();
-        if (navigator.vibrate) navigator.vibrate([50, 40, 50, 40, 120]);
+        resultLabelEl.innerText = 'Natural 20';
+        resultLabelEl.classList.add('gold', 'show');
+        glowEl.className = 'gold';
+        audio.nat20();
+        if (navigator.vibrate) navigator.vibrate([40, 40, 60]);
       } else if (result === 1) {
-        resultBadgeEl.innerText = 'PIFIA CRÍTICA (1)';
-        resultBadgeEl.classList.add('nat1', 'show');
-        fxFlashEl.className = 'red';
-        audioEngine.playNat1();
-        if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+        resultLabelEl.innerText = 'Critical 1';
+        resultLabelEl.classList.add('red', 'show');
+        glowEl.className = 'red';
+        if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
       } else {
-        resultBadgeEl.innerText = 'RESULTADO';
-        resultBadgeEl.classList.add('standard', 'show');
-        if (navigator.vibrate) navigator.vibrate(25);
+        resultLabelEl.innerText = '';
+        if (navigator.vibrate) navigator.vibrate(20);
       }
 
-      setTimeout(() => {
-        fxFlashEl.className = '';
-      }, 700);
+      setTimeout(() => { glowEl.className = ''; }, 700);
 
-      addHistory(result);
+      updateHistory(result);
     }
 
-    function addHistory(num) {
-      rollHistory.unshift(num);
-      if (rollHistory.length > 5) rollHistory.pop();
+    function updateHistory(val) {
+      history.unshift(val);
+      if (history.length > 5) history.pop();
 
-      historyContainerEl.innerHTML = '';
-      rollHistory.forEach((val, idx) => {
-        const pill = document.createElement('div');
-        pill.className = 'history-pill';
-        if (idx === 0) pill.classList.add('latest');
-        if (val === 20) pill.classList.add('nat20');
-        if (val === 1) pill.classList.add('nat1');
-        pill.innerText = val;
-        historyContainerEl.appendChild(pill);
-      });
+      historyRowEl.innerHTML = history.map((item, idx) => {
+        let cls = 'hist-item';
+        if (item === 20) cls += ' nat20';
+        if (item === 1) cls += ' nat1';
+        return `<span class="${cls}">${item}</span>`;
+      }).join(' · ');
     }
 
-    /* --- Input Handlers --- */
-    function setupInteractions() {
+    /* --- Listeners --- */
+    function setupListeners() {
       const container = document.getElementById('canvas-container');
 
-      // Swipe / Drag to throw
+      // Swipe / Drag to roll
       container.addEventListener('pointerdown', (e) => {
-        pointerDownPos = { x: e.clientX, y: e.clientY };
-        pointerDownTime = performance.now();
+        pointerStart = { x: e.clientX, y: e.clientY };
+        pointerStartTime = performance.now();
       });
 
       window.addEventListener('pointerup', (e) => {
-        if (!pointerDownPos) return;
+        if (!pointerStart) return;
 
-        const dx = e.clientX - pointerDownPos.x;
-        const dy = e.clientY - pointerDownPos.y;
-        const dt = Math.max(10, performance.now() - pointerDownTime);
-        pointerDownPos = null;
+        const dx = e.clientX - pointerStart.x;
+        const dy = e.clientY - pointerStart.y;
+        const dt = Math.max(10, performance.now() - pointerStartTime);
+        pointerStart = null;
 
         const dist = Math.hypot(dx, dy);
-        if (dist > 35 && dt < 450) {
-          const speedX = (dx / dt) * 65;
-          const speedZ = (dy / dt) * 65;
-          throwDice(speedX, speedZ);
+        if (dist > 30 && dt < 400) {
+          const sx = (dx / dt) * 60;
+          const sz = (dy / dt) * 60;
+          roll(sx, sz);
         } else {
-          throwDice();
+          roll();
         }
       });
 
       // Roll Button
-      rollBtn.addEventListener('click', (e) => {
+      rollPill.addEventListener('click', (e) => {
         e.stopPropagation();
-        throwDice();
+        roll();
       });
 
       // Spacebar
       window.addEventListener('keydown', (e) => {
         if (e.code === 'Space') {
           e.preventDefault();
-          throwDice();
+          roll();
         }
       });
 
-      // Sound Toggle
+      // Sound toggle
       soundBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const unmuted = audioEngine.toggleMute();
+        const unmuted = audio.toggle();
         soundBtn.innerText = unmuted ? '🔊' : '🔇';
       });
 
-      // Theme Picker
+      // Theme toggle
       themeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        themeMenu.classList.toggle('open');
+        themePopover.classList.toggle('open');
       });
 
-      document.querySelectorAll('.theme-opt').forEach(opt => {
-        opt.addEventListener('click', (e) => {
+      document.querySelectorAll('.theme-item').forEach(item => {
+        item.addEventListener('click', (e) => {
           e.stopPropagation();
-          const themeKey = opt.dataset.theme;
-          if (THEMES[themeKey]) {
-            currentThemeKey = themeKey;
-            currentTheme = THEMES[themeKey];
-            localStorage.setItem('d20_theme', themeKey);
+          const k = item.dataset.theme;
+          if (THEMES[k]) {
+            currentThemeKey = k;
+            currentTheme = THEMES[k];
+            localStorage.setItem('d20_theme', k);
 
-            document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
-            opt.classList.add('active');
-            rollBtn.style.background = currentTheme.buttonBg;
+            document.querySelectorAll('.theme-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
 
             setupD20Mesh(currentTheme);
-            themeMenu.classList.remove('open');
-            throwDice();
+            themePopover.classList.remove('open');
+            roll();
           }
         });
       });
 
       window.addEventListener('click', () => {
-        themeMenu.classList.remove('open');
+        themePopover.classList.remove('open');
       });
 
-      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
     }
 
-    function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    /* --- Animation & Stepping Loop --- */
+    /* --- Render & Physics Loop --- */
     function animate() {
       requestAnimationFrame(animate);
 
       const delta = Math.min(clock.getDelta(), 0.1);
-
-      // Accurate variable-rate physics step
       world.step(1 / 60, delta, 3);
 
-      // Sync Three.js Mesh with Cannon Body
+      // Safety: keep die bounded
+      if (Math.abs(diceBody.position.x) > 6 || Math.abs(diceBody.position.z) > 6 || diceBody.position.y > 10) {
+        diceBody.position.set(0, 4.5, 0);
+        diceBody.velocity.set(0, -2, 0);
+      }
+
+      // Sync 3D Mesh
       diceMesh.position.copy(diceBody.position);
       diceMesh.quaternion.copy(diceBody.quaternion);
 
-      // Resting Detection
+      // Rest Detection
       if (isRolling) {
         const speed = diceBody.velocity.length();
         const angSpeed = diceBody.angularVelocity.length();
         const elapsed = performance.now() - rollStartTime;
 
         if (
-          (speed < 0.08 && angSpeed < 0.08 && diceBody.position.y < RADIUS + 0.35 && elapsed > 800) ||
-          (elapsed > 3800 && speed < 0.25)
+          (speed < 0.08 && angSpeed < 0.08 && diceBody.position.y < RADIUS + 0.35 && elapsed > 700) ||
+          (elapsed > 3500 && speed < 0.2)
         ) {
           const res = detectTopFace();
           onDiceRest(res);
@@ -1373,18 +1127,18 @@
 
     window.onload = init;
 
-    // Register Service Worker for PWA / iOS Offline Support
+    // Service Worker for iPhone / PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch((err) => {
-          console.warn('ServiceWorker registration note:', err);
+          console.warn('SW note:', err);
         });
       });
     }
 
-    // Prevent elastic bounce scrolling on iOS Safari
+    // Prevent iOS rubber-banding
     document.addEventListener('touchmove', (e) => {
-      if (e.target.tagName !== 'BUTTON' && !e.target.closest('#theme-menu')) {
+      if (e.target.tagName !== 'BUTTON' && !e.target.closest('#theme-popover')) {
         e.preventDefault();
       }
     }, { passive: false });
