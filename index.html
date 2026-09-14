@@ -5,15 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>D20 Dice Roller 3D</title>
 
-  <!-- PWA & Mobile Web App Settings -->
+  <!-- PWA & Mobile Web App Settings for iPhone / Android -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="D20 Dice">
+  <meta name="apple-mobile-web-app-title" content="D20">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="D20">
+  <meta name="format-detection" content="telephone=no">
   <meta name="theme-color" content="#090b10">
 
-  <!-- Dynamic Icon -->
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,5 92,28 92,72 50,95 8,72 8,28' fill='%238b1523' stroke='%23f1c40f' stroke-width='4'/><text x='50' y='63' font-size='36' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-weight='bold'>20</text></svg>">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,5 92,28 92,72 50,95 8,72 8,28' fill='%238b1523' stroke='%23f1c40f' stroke-width='4'/><text x='50' y='63' font-size='36' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-weight='bold'>20</text></svg>">
+  <!-- Apple Touch Icon (180x180 PNG required for iOS Home Screen) -->
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+  <!-- Standard Favicons & Web App Manifest -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="manifest" href="manifest.json">
 
   <!-- Google Font: Cinzel (RPG / Tabletop Style) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,6 +53,8 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch;
       background-color: var(--bg-dark);
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: var(--text-main);
@@ -1362,6 +1372,22 @@
     }
 
     window.onload = init;
+
+    // Register Service Worker for PWA / iOS Offline Support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch((err) => {
+          console.warn('ServiceWorker registration note:', err);
+        });
+      });
+    }
+
+    // Prevent elastic bounce scrolling on iOS Safari
+    document.addEventListener('touchmove', (e) => {
+      if (e.target.tagName !== 'BUTTON' && !e.target.closest('#theme-menu')) {
+        e.preventDefault();
+      }
+    }, { passive: false });
   </script>
 </body>
 </html>
